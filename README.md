@@ -2,24 +2,28 @@
 
 ## 📋 Prehľad
 
-System Monitor je multifunkčná aplikácia na monitorovanie systému vytvorená v jazyku Rust, ktorá poskytuje terminálové používateľské rozhranie (TUI) aj REST API. Aplikácia ponúka monitorovanie systémových zdrojov v reálnom čase s podporou SQLite databázy pre ukladanie historických metrík.
+**System Monitor** je multifunkčná aplikácia na monitorovanie systému vytvorená v jazyku Rust, ktorá poskytuje terminálové používateľské rozhranie (TUI) aj REST API. Aplikácia ponúka monitorovanie systémových zdrojov v reálnom čase s podporou **PostgreSQL** databázy pre ukladanie historických metrík.
+
+---
 
 ## 🚀 Funkcie
 
 ### Hlavné funkcie
 
-- **Monitorovanie v reálnom čase**: CPU, RAM, disk, sieťové a teplotné metriky
-- **Teplotný monitoring**: Sledovanie teplôt CPU, GPU, základnej dosky a diskov s upozorneniami
-- **Analýza procesov**: Top procesy podľa využitia CPU a siete
+- **Monitorovanie v reálnom čase**: CPU, RAM, disk, sieť a GPU metriky
+- **Teplotný monitoring**: Sledovanie teplôt CPU, GPU, základnej dosky a diskov s vizuálnymi upozorneniami
+- **Analýza procesov**: Top procesy podľa využitia CPU a sieťovej aktivity
 - **Duálne rozhranie**: TUI pre lokálne použitie a REST API pre vzdialený prístup
-- **Databázové úložisko**: SQLite integrácia pre historické metriky
-- **Asynchrónne operácie**: Tokio runtime pre výkon
+- **Databázové úložisko**: **PostgreSQL** integrácia pre historické metriky a analýzy
+- **Cross-platform**: Podpora pre Windows (s WMI) a Linux
 
 ### Režimy rozhrania
 
-- 🎨 **TUI režim**: Interaktívne terminálové rozhrainie s farebnými metrikami
-- 🌐 **API režim**: RESTful API server s JSON endpointmi
-- 📊 **Kombinovaný režim**: TUI + API súčasne
+1. **🎨 TUI režim**: Interaktívne terminálové rozhranie s farebnými metrikami
+2. **🌐 API režim**: RESTful API server s JSON endpointmi
+3. **📊 Kombinovaný režim**: Súčasné spustenie TUI aj API servera
+
+---
 
 ## 🏗️ Architektúra
 
@@ -28,545 +32,318 @@ System Monitor je multifunkčná aplikácia na monitorovanie systému vytvorená
 ```
 system-monitor/
 ├── src/
-│   ├── main.rs              # Vstupný bod aplikácie
-│   ├── lib.rs               # Knižnica
-│   ├── cli/                 # Command-line interface
-│   │   ├── app/             # TUI aplikačná logika
-│   │   │   ├── app_staters.rs
-│   │   │   └── app_system_info.rs
-│   │   └── ui/              # UI komponenty
+│   ├── main.rs                 # Vstupný bod aplikácie
+│   ├── lib.rs                  # Hlavná knižnica
+│   ├── cli/                    # Command-line interface
+│   │   ├── app.rs              # Hlavná CLI logika (runner, app state)
+│   │   └── ui/                 # UI komponenty pre TUI
+│   │       ├── mod.rs
 │   │       ├── ui_help.rs
 │   │       ├── ui_network.rs
 │   │       ├── ui_overview.rs
 │   │       ├── ui_process.rs
 │   │       └── ui_widgets.rs
-│   ├── services/            # Služby pre monitoring
-│   │   ├── api_monitor.rs   # Monitor pre API
-│   │   └── monitor.rs       # Hlavný monitor pre TUI
-│   ├── models/              # Dátové modely
-│   │   ├── metrics.rs       # Systémové metriky
-│   │   └── temperatures.rs  # Teplotné dáta
-│   ├── db/                  # Databázové operácie
-│   │   ├── connection.rs    # SQLite pool
-│   │   └── queries.rs       # SQL queries
-│   ├── api/                 # REST API implementácia
-│   │   ├── handlers.rs      # API handlery
-│   │   ├── routes.rs        # Routing
-│   │   └── staters.rs       # State management
-│   ├── config/              # Konfigurácia
-│   │   ├── dirs.rs          # Cesty k súborom
-│   │   └── helpers.rs       # Pomocné funkcie
-│   └── modes/               # Režimy aplikácie
-│       ├── api.rs           # API režim
-│       ├── menus.rs         # Interaktívne menu
-│       └── tui.rs           # TUI režim
+│   ├── services/               # Služby pre monitoring
+│   │   ├── mod.rs
+│   │   ├── api_monitor.rs      # Monitor pre API server
+│   │   ├── monitor.rs          # Hlavný monitor pre TUI
+│   │   └── temperatures.rs     # Monitor teplôt (WMI pre Windows)
+│   ├── models/                 # Dátové modely
+│   │   ├── mod.rs
+│   │   ├── metrics.rs          # Systémové metriky
+│   │   └── temperatures.rs     # Teplotné modely a varovania
+│   ├── db/                     # Databázové operácie
+│   │   ├── mod.rs
+│   │   ├── connection.rs       # PostgreSQL pool a inicializácia
+│   │   └── queries.rs          # SQL queries pre metriky
+│   ├── api/                    # REST API implementácia
+│   │   ├── mod.rs
+│   │   ├── handlers.rs         # API handlery
+│   │   ├── routes.rs           # API routing
+│   │   └── state.rs            # Aplikačný state pre API
+│   ├── modes/                  # Režimy aplikácie (TUI, API, Menu)
+│   │   ├── mod.rs
+│   │   ├── api.rs              # Spustenie API módu
+│   │   ├── menu.rs             # Interaktívne textové menu
+│   │   └── tui.rs              # Spustenie TUI módu
+│   └── helpers/                # Pomocné funkcie a validácia
+│       ├── mod.rs
+│       └── helpers.rs
 ├── Cargo.toml
 ├── Cargo.lock
-├── .env                     # Environment variables
-├── build.sh                 # Build script
+├── .env.example                # Príklad premenných prostredia
+├── build.rs
 └── README.md
 ```
 
 ### Kľúčové komponenty
 
-#### 1. CLI modul (`src/cli/`)
+| Komponent | Účel | Hlavné súbory |
+|-----------|------|---------------|
+| **CLI & UI** | Parsovanie argumentov a renderovanie TUI | `cli/app.rs`, `cli/ui/*.rs` |
+| **Services** | Zber systémových metrík a teplôt | `services/monitor.rs`, `services/temperatures.rs` |
+| **Models** | Dátové štruktúry pre metriky a procesy | `models/metrics.rs` |
+| **Database** | **PostgreSQL** spojenie a ukladanie metrík | `db/connection.rs`, `db/queries.rs` |
+| **API** | REST API server s endpointmi | `api/routes.rs`, `api/handlers.rs` |
+| **Modes** | Spúšťanie rôznych režimov aplikácie | `modes/tui.rs`, `modes/api.rs` |
 
-**Účel**: Parsovanie argumentov príkazového riadku a routing príkazov
-
-**Kľúčové štruktúry**:
-- `Cli`: Hlavná CLI štruktúra s podpríkazmi
-- `Commands`: Enum s variantmi Tui, Api, Both
-
-**Použitie**:
-```bash
-system-monitor              # Interaktívne menu
-system-monitor tui          # Spustenie TUI rozhrania
-system-monitor api          # Spustenie API servera
-system-monitor both         # Spustenie oboch režimov
-```
-
-#### 2. UI modul (`src/cli/ui/`)
-
-**Účel**: Renderovanie terminálového používateľského rozhrania pomocou ratatui
-
-**Kľúčové komponenty**:
-- `ui_overview.rs`: Hlavný prehľad so systémovými metrikami
-- `ui_network.rs`: Monitoring sieťovej šírky pásma
-- `ui_process.rs`: Detailný pohľad na procesy
-- `ui_help.rs`: Obrazovka pomoci s klávesovými skratkami
-- `ui_widgets.rs`: Znovupoužiteľné UI komponenty
-
-#### 3. Services modul (`src/services/`)
-
-**Účel**: Hlavná funkcionalita monitorovania systému
-
-**Kľúčové komponenty**:
-- `monitor.rs`: Hlavný systémový monitor pre TUI (s podporou teplôt)
-- `api_monitor.rs`: API-špecifický monitor (lightweight, pre background úlohy)
-
-#### 4. Models modul (`src/models/`)
-
-**Účel**: Dátové štruktúry pre systémové metriky
-
-**Kľúčové štruktúry**:
-- `SystemMetrics`: Kompletné systémové metriky vrátane teplôt
-- `ProcessInfo`: Informácie o jednotlivých procesoch
-- `TemperatureInfo`: Teploty komponentov s úrovňami upozornení
-- `GpuInfo`: GPU-špecifické metriky
-
-#### 5. Database modul (`src/db/`)
-
-**Účel**: SQLite databázové operácie
-
-**Kľúčové komponenty**:
-- `connection.rs`: Pooling databázových spojení a inicializácia tabuliek
-- `queries.rs`: SQL queries pre ukladanie a získavanie metrík
-
-#### 6. API modul (`src/api/`)
-
-**Účel**: Implementácia REST API servera pomocou axum
-
-**Kľúčové komponenty**:
-- **Endpointy**:
-  - `GET /api/metrics` - Systémové metriky
-  - `GET /api/processes` - Top procesy
-  - `GET /api/health` - Health check
-  - `GET /api/gpu` - GPU informácie
-  - `GET /api/history` - Historické dáta
-- **Funkcie**: Background ukladanie metrík, pooling spojení, JSON odpovede
+---
 
 ## 🔧 Inštalácia a nastavenie
 
 ### Predpoklady
 
-```bash
-# Rust (1.75+)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+1. **Rust toolchain** (1.70+):
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
 
-# SQLite (zvyčajne už nainštalovaný)
-# Ubuntu/Debian
-sudo apt-get install sqlite3 libsqlite3-dev
+2. **PostgreSQL databáza**:
+   ```bash
+   # Ubuntu/Debian
+   sudo apt install postgresql postgresql-contrib
+   sudo systemctl start postgresql
 
-# Windows - SQLite je included
-```
+   # Vytvorenie databázy a užívateľa
+   sudo -u postgres psql -c "CREATE DATABASE system_monitor;"
+   sudo -u postgres psql -c "CREATE USER monitor_user WITH PASSWORD 'strong_password';"
+   sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE system_monitor TO monitor_user;"
+   ```
 
 ### Build zo zdrojového kódu
 
 ```bash
-# Klonovanie repozitára
+# Klonovanie a build
 git clone <repository-url>
 cd system-monitor
-
-# Build v release režime
 cargo build --release
 
 # Binárka bude v: ./target/release/system-monitor
+# Na Linuxe: ./target/release/system-monitor
+# Na Windows: ./target/release/system-monitor.exe
 ```
 
 ### Konfigurácia
 
-Vytvorte `.env` súbor v koreňovom adresári projektu:
+Vytvorte súbor `.env` v koreňovom adresári projektu:
 
 ```env
-DATABASE_URL=sqlite://./data/metrics.db
+# Povinné: PostgreSQL spojenie
+DATABASE_URL=postgres://monitor_user:strong_password@localhost/system_monitor
+
+# Voliteľné: Nastavenia API servera
 API_HOST=127.0.0.1
 API_PORT=3000
-REFRESH_INTERVAL_MS=2000
+SAVE_METRICS=true  # Povoliť automatické ukladanie metrík každých 60s
 ```
 
-Alebo použite konfiguračný súbor `config/settings.toml`:
-
-```toml
-[api]
-host = "127.0.0.1"
-port = 3000
-
-[database]
-path = "data/metrics.db"
-max_connections = 5
-
-[monitoring]
-interval_ms = 2000
-history_retention_days = 7
-```
+---
 
 ## 📖 Príklady použitia
 
-### Interaktívny menu režim
+### Interaktívne menu (predvolený režim)
+
+Spustí menu na výber režimu.
 
 ```bash
 system-monitor
+# alebo na Linuxe: ./system-monitor
 ```
 
-Zobrazí interaktívne menu pre výber medzi TUI, API alebo pomocou.
-
 ### TUI režim
+
+Spustí grafické terminálové rozhranie.
 
 ```bash
 system-monitor tui
 ```
 
-Spustí terminálové rozhranie s nasledujúcimi klávesovými skratkami:
+#### Klávesové skratky v TUI:
 
 | Klávesa | Akcia |
 |---------|-------|
 | `Q` | Ukončenie aplikácie |
-| `H` | Zobrazenie/skrytie pomoci |
-| `R` | Obnovenie dát |
+| `H` | Zobrazenie/skrytie obrazovky pomoci |
+| `R` | Okamžité obnovenie dát |
 | `N` | Prepnutie na sieťový pohľad |
-| `Tab` | Prepínanie medzi pohľadmi |
+| `Tab` | Prepínanie medzi hlavnými pohľadmi |
 | `↑/↓` | Navigácia v zozname procesov |
-| `Enter` | Zobrazenie detailov procesu |
-| `Esc` | Návrat späť/ukončenie |
+| `Enter` | Zobrazenie detailov vybraného procesu |
+| `Esc` | Návrat späť (z detailov) alebo ukončenie |
 
 ### API režim
 
+Spustí REST API server. Metriky sa automaticky ukladajú do DB, ak je `SAVE_METRICS=true`.
+
 ```bash
-# Spustenie s predvolenými nastaveniami
+# Predvolené nastavenia (host: 127.0.0.1, port: 3000)
 system-monitor api
 
-# Spustenie s vlastnými nastaveniami
+# Vlastné nastavenia
 system-monitor api --host 0.0.0.0 --port 8080
 ```
 
-### Kombinovaný režim
+---
+
+## 🌐 API referenčný prehľad
+
+Server poskytuje nasledujúce JSON endpointy:
+
+| Endpoint | Metóda | Popis |
+|----------|--------|-------|
+| `/api/metrics` | GET | Aktuálne systémové metriky vrátane teplôt |
+| `/api/processes` | GET | Zoznam top procesov (param. `?limit=10`) |
+| `/api/health` | GET | Health check stav servera a DB |
+| `/api/gpu` | GET | Informácie o GPU (simulované/odhadované) |
+| `/api/history?hours=24` | GET | Historické metriky za posledných N hodín |
+
+### Príklad: Získanie metrík
 
 ```bash
-system-monitor both
+curl http://localhost:3000/api/metrics | jq .
 ```
 
-Spustí TUI aj API server súčasne.
+**Odpoveď:**
 
-## 🌐 API endpointy
-
-### GET /api/metrics
-
-Vracia kompletné systémové metriky.
-
-**Príklad odpovede**:
 ```json
 {
   "timestamp": "2025-12-18T10:30:00Z",
   "cpu_usage": 45.2,
-  "memory_total": 17179869184,
   "memory_used": 8589934592,
-  "memory_available": 8589934592,
-  "swap_total": 4294967296,
-  "swap_used": 1073741824,
+  "memory_total": 17179869184,
   "cpu_temperature": 65.0,
   "gpu_temperature": 70.0,
   "network_sent_kbps": 1250.5,
   "network_recv_kbps": 3450.2,
-  "disk_total": 500000000000,
-  "disk_used": 250000000000,
-  "process_count": 156,
-  "system_uptime": 86400
+  "process_count": 156
 }
 ```
 
-### GET /api/processes
+---
 
-Vracia top procesy zoradené podľa kombinovaného využitia CPU a siete.
+## 🗄️ Databázová schéma (PostgreSQL)
 
-**Query parametre**:
-- `limit`: Počet procesov na vrátenie (predvolené: 10)
+Aplikácia automaticky vytvorí potrebné tabuľky pri prvom spojení.
 
-**Príklad odpovede**:
-```json
-[
-  {
-    "pid": 1234,
-    "name": "chrome.exe",
-    "cpu_usage": 25.5,
-    "memory": 524288000,
-    "network_sent": 1048576,
-    "network_recv": 2097152
-  }
-]
-```
-
-### GET /api/health
-
-Health check endpoint.
-
-**Odpoveď**:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2025-12-18T10:30:00Z",
-  "version": "1.0.0"
-}
-```
-
-### GET /api/history
-
-Vracia historické metriky z databázy.
-
-**Query parametre**:
-- `metric`: Typ metriky (cpu, memory, temperature)
-- `limit`: Počet záznamov (predvolené: 100)
-- `from`: Začiatočný timestamp
-- `to`: Koncový timestamp
-
-**Príklad**:
-```bash
-curl "http://localhost:3000/api/history?metric=cpu&limit=50"
-```
-
-## 🗄️ Databázová schéma
-
-### Tabuľka system_metrics
+### Hlavná tabuľka `system_metrics`:
 
 ```sql
 CREATE TABLE IF NOT EXISTS system_metrics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    cpu_usage REAL NOT NULL,
-    memory_total INTEGER NOT NULL,
-    memory_used INTEGER NOT NULL,
-    memory_available INTEGER NOT NULL,
-    swap_total INTEGER NOT NULL,
-    swap_used INTEGER NOT NULL,
-    disk_total INTEGER NOT NULL,
-    disk_used INTEGER NOT NULL,
-    disk_available INTEGER NOT NULL,
-    
-    -- GPU metriky
-    gpu_name TEXT,
-    gpu_usage REAL,
-    gpu_memory_total INTEGER,
-    gpu_memory_used INTEGER,
-    gpu_temperature REAL,
-    
-    -- Sieťové štatistiky
-    network_sent_kbps REAL,
-    network_recv_kbps REAL,
-    
-    -- Všeobecné informácie
-    process_count INTEGER NOT NULL,
-    system_uptime INTEGER NOT NULL,
-    
-    -- Teplotné metriky
-    cpu_temperature REAL,
-    motherboard_temperature REAL,
-    disk_temperature REAL,
-    max_temperature REAL
+    id BIGSERIAL PRIMARY KEY,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    cpu_usage DOUBLE PRECISION NOT NULL,
+    memory_total BIGINT NOT NULL,
+    memory_used BIGINT NOT NULL,
+    -- ... (ďalšie polia podľa modelu SystemMetrics)
+    cpu_temperature DOUBLE PRECISION,
+    gpu_temperature DOUBLE PRECISION,
+    motherboard_temperature DOUBLE PRECISION,
+    disk_temperature DOUBLE PRECISION,
+    max_temperature DOUBLE PRECISION
 );
 ```
 
-### Indexy
+Vytvoria sa aj indexy pre rýchle vyhľadávanie podľa času (`idx_metrics_timestamp`) a GPU (`idx_metrics_gpu`).
 
-```sql
-CREATE INDEX IF NOT EXISTS idx_metrics_timestamp 
-ON system_metrics(timestamp DESC);
-
-CREATE INDEX IF NOT EXISTS idx_metrics_cpu 
-ON system_metrics(cpu_usage, timestamp DESC);
-```
+---
 
 ## 🌡️ Teplotný monitoring
 
-### Úrovne upozornení na teplotu
+Aplikácia sa snaží získať čo najpresnejšie teploty, s fallback mechanizmom.
 
-| Teplota | Úroveň | Indikátor |
-|---------|--------|-----------|
-| < 65°C | Normálna | 🟢 |
-| 65-75°C | Stredná | 🟡 |
-| 75-85°C | Vysoká | 🟠 |
-| > 85°C | Kritická | 🔴 |
+| Zdroj teplôt | Platforma | Popis |
+|--------------|-----------|-------|
+| **WMI (Windows)** | Windows | Priamy dotaz na systémové senzory |
+| **SysFS (Linux)** | Linux | Čítanie z `/sys/class/thermal/` |
+| **Odhad (Fallback)** | Všetky | Odhad na základe aktuálneho zaťaženia CPU |
 
-### Zdroje teplôt
+### Úrovne varovaní
 
-- **Windows**: WMI queries pre reálne teploty
-- **Linux**: Čítanie z `/sys/class/thermal/` a `/sys/class/hwmon/`
-- **Fallback**: Odhadované teploty na základe využitia CPU
-- **Simulácia**: Predvolené hodnoty, keď nie sú dostupné senzory
+Vizuálne indikované farbou a ikonou:
 
-## 📦 Použité knižnice
+- **Normálna** (< 65°C): 🟢
+- **Stredná** (65-75°C): 🟡
+- **Vysoká** (75-85°C): 🟠
+- **Kritická** (> 85°C): 🔴
 
-### Core knižnice
+---
 
-| Knižnica | Verzia | Použitie |
-|----------|--------|----------|
-| **tokio** | 1.x | Asynchrónny runtime pre všetky async operácie |
-| **axum** | 0.7.x | Web framework pre REST API server |
-| **sqlx** | 0.7.x | Asynchrónna databáza (SQLite) s type-safe queries |
-| **ratatui** | 0.26.x | TUI framework pre terminálové rozhranie |
-| **crossterm** | 0.27.x | Cross-platform terminal manipulation |
+## 🚀 Rýchly štart
 
-### Monitoring knižnice
+### Možnosť 1: Stiahnutie predkompilovanej binárky
 
-| Knižnica | Použitie |
-|----------|----------|
-| **sysinfo** | Získavanie CPU, RAM, disk, network metrík |
-
-### Serializácia & Konfigurácia
-
-| Knižnica | Použitie |
-|----------|----------|
-| **serde** + **serde_json** | JSON serializácia pre API odpovede |
-| **toml** | Parsovanie konfiguračných súborov |
-
-### Utility knižnice
-
-| Knižnica | Použitie |
-|----------|----------|
-| **chrono** | Práca s časom a timestampmi |
-| **clap** | Parsovanie CLI argumentov |
-| **anyhow** | Ergonomický error handling |
-| **thiserror** | Vlastné error typy |
-| **tracing** + **tracing-subscriber** | Strukturované logovanie |
-
-## 🛠️ Vývoj
-
-### Pridanie nových metrík
-
-1. Pridajte pole do `SystemMetrics` v `models/metrics.rs`
-2. Aktualizujte databázovú schému v `db/connection.rs`
-3. Implementujte zber v príslušnej monitor službe
-4. Aktualizujte UI komponenty podľa potreby
-
-### Pridanie nových UI pohľadov
-
-1. Vytvorte nový súbor v `ui/` adresári
-2. Implementujte `render()` funkciu
-3. Pridajte do UI routingu v hlavnej aplikácii
-4. Aktualizujte help screen s novými skratkami
-
-### Testovanie
-
-```bash
-# Spustenie testov
-cargo test
-
-# Testy s výstupom
-cargo test -- --nocapture
-
-# Integračné testy
-cargo test --test integration
-
-# Špecifický test
-cargo test test_monitor_service
-```
-
-### Code formátovanie a linting
-
-```bash
-# Formátovanie kódu
-cargo fmt
-
-# Linting
-cargo clippy
-
-# Lint s opravami
-cargo clippy --fix
-```
-
-## 📊 Výkonové úvahy
-
-### Využitie pamäte
-
-- **TUI režim**: ~10-20 MB
-- **API režim**: ~20-30 MB (s background ukladaním)
-- **Databázové spojenia**: Pool 5 spojení
-
-### Frekvencia aktualizácie
-
-- **TUI refresh**: Každé 2 sekundy
-- **API zber metrík**: On-demand
-- **Background ukladanie**: Každých 60 sekúnd (ak povolené)
-
-## 🔐 Bezpečnostné úvahy
-
-### API bezpečnosť
-
-- API je navrhnuté pre použitie v lokálnej sieti
-- Nie je implementovaná autentifikácia (určené pre dôveryhodné siete)
-- Pre produkčné použitie zvážte pridanie autentifikácie
-
-### Ochrana dát
-
-- Zbierajú sa iba systémové metriky
-- Neukládajú sa žiadne osobné údaje alebo informácie o užívateľoch
-- Názvy procesov sa zbierajú, ale nie užívateľské dáta
-
-## 📄 Dokumentácia
-
-### Generovanie programátorskej dokumentácie
-
-```bash
-# Vygeneruje HTML dokumentáciu
-cargo doc --no-deps --open
-
-# S private items
-cargo doc --no-deps --document-private-items --open
-```
-
-Dokumentácia bude dostupná v `target/doc/system_monitor/index.html`
-
-### Obsah dokumentácie
-
-- 📄 **Zadanie semestrálnej práce** - Kompletné zadanie projektu
-- 🏗️ **UML diagramy** - Class diagram, Component diagram, Sequence diagram
-- 📖 **Používateľská príručka** - Inštalácia, konfigurácia, ovládanie, funkcionality
-- 👨‍💻 **Programátorská príručka** - API dokumentácia, moduly, typy, funkcie
-- 📋 **Zoznam knižníc** - Použité dependencies s detailným popisom použitia
-
-
-
-## 🚀 Quick Start
-
-### Možnosť 1: Stiahnutie predkompilovaného súboru
+Pre jednoduchšie testovanie môžete použiť priamo skompilované súbory.
 
 **Windows (x64):**
-- [📥 Stiahnuť system-monitor.exe](https://drive.google.com/file/d/1bQvI8uQ8mqYtOfsQ3YPLvQl7l6IcHD9C/view?usp=sharing)
+- Stiahnuť `system-monitor`[📥system-monitor.exe](https://drive.google.com/file/d/1bQvI8uQ8mqYtOfsQ3YPLvQl7l6IcHD9C/view?usp=sharing)
 
-<!-- **Linux (x64):**
-- [📥 Stiahnuť system-monitor](https://github.com/Maksikos-ctrl/system-monitor/target/x86_64-pc-windows-msvc/release/system-monitor.exe) -->
+<!-- **🐧 Linux (x64):**
+- 📥 Stiahnuť `system-monitor` -->
 
 Po stiahnutí:
-```bash
-# Windows
-system-monitor.exe tui
 
-# Linux/macOS
+```bash
+# Windows (v PowerShell alebo CMD)
+.\system-monitor.exe --help
+
+# Linux / macOS (v termináli)
+# 1. Udeľte súboru práva na spustenie:
 chmod +x system-monitor
+# 2. Spustite aplikáciu:
 ./system-monitor tui
 ```
 
-### Možnosť 2: Build zo zdrojového kódu
+### Možnosť 2: Build a spustenie zo zdrojov
+
+Toto je preferovaný spôsob pre vývoj a plnú funkcionalitu.
 
 ```bash
 # 1. Klonovanie a build
-git clone <repo-url> && cd system-monitor
+git clone https://github.com/Maksikos-ctrl/system-monitor.git
+cd system-monitor
 cargo build --release
 
-# 2. Spustenie TUI
-./target/release/system-monitor tui
+# 2. Nastavenie databázy (pozri vyššie "Predpoklady") a .env súboru
 
-# 3. Alebo spustenie API
+# 3. Spustenie v požadovanom režime
+# TUI režim:
+./target/release/system-monitor tui
+# API režim:
 ./target/release/system-monitor api --port 3000
 
-# 4. Test API
-curl http://localhost:3000/api/metrics
+# 4. Overenie funkčnosti API
+curl http://localhost:3000/api/health
 ```
+
+---
+
+## 📦 Použité knižnice (Dependencies)
+
+| Kategória | Knižnica | Použitie v projekte |
+|-----------|----------|---------------------|
+| **Async Runtime** | `tokio` | Asynchrónny runtime pre API server a DB operácie |
+| **Web Framework** | `axum` | Jednoduchý a výkonný framework pre REST API |
+| **Databáza** | `sqlx` | Asynchrónny, type-safe PostgreSQL driver |
+| **TUI Framework** | `ratatui` | Moderné knižnica pre vytvorenie terminálového UI |
+| **Systémové info** | `sysinfo` | Získavanie metrík CPU, pamäte, procesov, diskov |
+| **WMI (Windows)** | `wmi` | Monitorovanie teplôt na Windows |
+| **CLI Parsing** | `clap` | Parsovanie argumentov príkazového riadku |
+| **Konfigurácia** | `dotenv` | Načítanie premenných prostredia z `.env` súboru |
+
+Úplný zoznam nájdete v súbore `Cargo.toml`.
+
+---
 
 ## 📞 Kontakt a podpora
 
-**Autor**: [Maksym Chernikov]  
-**Študent ID**: [563141]  
-**Email**: [maksikos973@gmail.com]  
-**Akademický rok**: 2025/2026  
-**Predmet**: Jazyk Rust
+- 👨‍💻 **Autor**: Maksym Chernikov
+- 📧 **Email**: maksikos973@gmail.com
+- 📚 **Predmet**: Jazyk Rust
+- 🏫 **Vysoká škola**: FRI UNIZA
+- 📅 **Akademický rok**: 2025/2026
 
 ---
 
-## 📝 Licencia
+## ⭐ Semestrálna práca - Jazyk Rust 2025
 
-Tento projekt je vytvorený pre akademické účely v rámci predmetu Jazyk Rust na [FRI UNIZA].
-
----
-
-⭐ **Semestrálna práca - Jazyk Rust 2025**
-
-*Built with ❤️ using Rust 🦀*
+Built with ❤️ using Rust 🦀
