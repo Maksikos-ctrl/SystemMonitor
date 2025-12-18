@@ -519,10 +519,10 @@ Dokumentácia bude dostupná v `target/doc/system_monitor/index.html`
 ### Možnosť 1: Stiahnutie predkompilovaného súboru
 
 **Windows (x64):**
-- [📥 Stiahnuť system-monitor.exe](https://github.com/Maksikos-ctrl/system-monitor/target/x86_64-pc-windows-msvc/release/system-monitor.exe)
+- [📥 Stiahnuť system-monitor.exe](https://drive.google.com/file/d/1bQvI8uQ8mqYtOfsQ3YPLvQl7l6IcHD9C/view?usp=sharing)
 
-**Linux (x64):**
-- [📥 Stiahnuť system-monitor](https://github.com/Maksikos-ctrl/system-monitor/target/x86_64-pc-windows-msvc/release/system-monitor.exe)
+<!-- **Linux (x64):**
+- [📥 Stiahnuť system-monitor](https://github.com/Maksikos-ctrl/system-monitor/target/x86_64-pc-windows-msvc/release/system-monitor.exe) -->
 
 Po stiahnutí:
 ```bash
