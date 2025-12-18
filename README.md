@@ -114,7 +114,7 @@ system-monitor/
 
 ```bash
 # Klonovanie a build
-git clone <repository-url>
+git clone <https://github.com/Maksikos-ctrl/SystemMonitor>
 cd system-monitor
 cargo build --release
 
