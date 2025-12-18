@@ -1,0 +1,100 @@
+[package]
+name = "system-monitor"
+version = "0.1.0"
+edition = "2021"
+description = "Semestral work Simple cross-platform system monitor"
+authors = ["Maksym Chernikov"]
+license = "MIT"
+repository = "https://github.com/Maksikos-ctrl/system-monitor"
+readme = "README.md"
+
+# Добавляем настройки сборки для Windows
+[package.metadata.windows]
+# Можно указать иконку для exe-файла (опционально)
+# icon = "icon.ico"
+
+# Добавляем цели для кросс-компиляции (опционально)
+[package.metadata.cross]
+targets = ["x86_64-pc-windows-msvc", "x86_64-pc-windows-gnu"]
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "postgres", "chrono"] }
+
+# REST API
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Date/Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# TUI
+ratatui = "0.28"
+crossterm = "0.27"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# System monitoring - ГЛАВНАЯ БИБЛИОТЕКА
+sysinfo = "0.30"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+whoami = "1.5"
+
+
+# Environment variables
+dotenv = "0.15"
+
+rand = "0.8"
+hostname = "0.3"
+unicode-width = "0.1"
+
+wmi = { version = "0.12", features = ["chrono"] } 
+windows = { version = "0.48", features = ["Win32_System_Wmi"] }
+
+dialoguer = "0.11"  # Для интерактивного меню
+
+# Полезные для диагностики
+which = "4.4"  # Для поиска бинарных файлов в системе
+lazy_static = "1.4"  # Для глобальных инициализаций
+
+# Добавляем профили сборки
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true  # Link-time optimization для меньшего размера и большей скорости
+codegen-units = 1  # Лучшая оптимизация
+
+# Для Windows MSVC - статическое связывание CRT
+[target.'cfg(target_os = "windows")'.profile.release]
+# Раскомментируй если используешь MSVC toolchain:
+# rustflags = ["-C", "target-feature=+crt-static"]
+
+# Для Windows GNU (MingW) - обычно статический по умолчанию
+[target.'cfg(target_env = "gnu")'.profile.release]
+panic = "abort"  # Уменьшает размер exe
+
+wmi = { version = "0.12", features = ["chrono"] }
+windows = { version = "0.48", features = ["Win32_System_Wmi"] }
+send_wrapper = "0.6"
+pnet = "0.35" 
+
