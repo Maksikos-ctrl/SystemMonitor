@@ -1,0 +1,98 @@
+@startuml
+package "Cargo.toml Dependencies" {
+  
+  rectangle "Core Dependencies" {
+    [sysinfo\nSystem information] as Sysinfo
+    [tokio\nAsync runtime] as Tokio
+    [serde\nSerialization] as Serde
+    [anyhow\nError handling] as Anyhow
+    [thiserror\nCustom errors] as Thiserror
+  }
+  
+  rectangle "Database" {
+    [sqlx\nAsync SQL] as Sqlx
+    [tokio-postgres\nPostgreSQL] as TokioPg
+    [bb8\nConnection pool] as Bb8
+  }
+  
+  rectangle "Web/API" {
+    [axum\nWeb framework] as Axum
+    [tower\nMiddleware] as Tower
+    [reqwest\nHTTP client] as Reqwest
+    [serde_json\nJSON] as SerdeJson
+  }
+  
+  rectangle "UI/TUI" {
+    [ratatui\nTerminal UI] as Ratatui
+    [crossterm\nCross-term] as Crossterm
+    [tui-logger\nLogging] as TuiLogger
+  }
+  
+  rectangle "Utilities" {
+    [chrono\nDate/time] as Chrono
+    [clap\nCLI parsing] as Clap
+    [config\nConfiguration] as Config
+    [dotenvy\n.env files] as Dotenvy
+    [log\nLogging] as Log
+  }
+}
+
+' Development dependencies
+package "dev-dependencies" #EEE {
+  [assert_cmd\nTesting] as AssertCmd
+  [tempfile\nTemp files] as Tempfile
+  [mockito\nHTTP mocking] as Mockito
+}
+
+' Feature flags
+package "Feature Flags" #E6F3FF {
+  ("tui") as FeatureTui
+  ("api") as FeatureApi
+  ("database") as FeatureDb
+  ("full") as FeatureFull
+}
+
+' Relationships
+Sysinfo --> system_monitor : provides system data
+Tokio --> system_monitor : async runtime
+Serde --> system_monitor : serialization
+Sqlx --> system_monitor : database access
+Axum --> system_monitor : web server
+Ratatui --> system_monitor : terminal UI
+
+FeatureTui --> Ratatui : enables
+FeatureTui --> Crossterm : enables
+FeatureApi --> Axum : enables  
+FeatureApi --> Tower : enables
+FeatureDb --> Sqlx : enables
+FeatureDb --> TokioPg : enables
+FeatureFull --> FeatureTui
+FeatureFull --> FeatureApi
+FeatureFull --> FeatureDb
+
+system_monitor --> AssertCmd : test only
+system_monitor --> Mockito : test only
+
+note right of Sysinfo
+  Platform-specific:
+  - Windows: WMI queries
+  - Linux: /proc, /sys files
+  - macOS: sysctl, IOKit
+end note
+
+note left of Axum
+  REST API features:
+  - JSON serialization
+  - Middleware support
+  - WebSocket support
+  - Rate limiting
+end note
+
+note bottom of Ratatui
+  TUI capabilities:
+  - Real-time updates
+  - Custom widgets
+  - Mouse support
+  - Theme support
+end note
+@enduml

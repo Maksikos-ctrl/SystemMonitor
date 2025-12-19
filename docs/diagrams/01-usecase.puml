@@ -1,0 +1,36 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+actor "User" as User
+actor "External System" as System
+
+rectangle "System Monitor" {
+  usecase "Start TUI mode" as UC1
+  usecase "View system metrics" as UC2
+  usecase "Monitor processes" as UC3
+  usecase "Analyze network activity" as UC4
+  usecase "View temperatures" as UC5
+  usecase "Start API server" as UC6
+  usecase "Get metrics via API" as UC7
+  usecase "Save metrics to database" as UC8
+  usecase "View historical data" as UC9
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC9
+
+System --> UC7
+System --> UC8
+
+UC1 .> UC2 : includes
+UC1 .> UC3 : includes
+UC1 .> UC4 : includes
+UC1 .> UC5 : includes
+UC6 .> UC7 : includes
+UC6 .> UC8 : includes
+@enduml

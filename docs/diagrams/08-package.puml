@@ -1,0 +1,133 @@
+@startuml
+package "system_monitor" {
+  folder "src" {
+    file "main.rs" as Main
+    file "lib.rs" as Lib
+    
+    package "models" {
+      file "mod.rs" as ModelsMod
+      file "system_metrics.rs" as Metrics
+      file "process_info.rs" as Process
+      file "temperature_info.rs" as TempInfo
+      
+      Metrics -up-> ModelsMod
+      Process -up-> ModelsMod
+      TempInfo -up-> ModelsMod
+    }
+    
+    package "services" {
+      file "mod.rs" as ServicesMod
+      file "system_monitor.rs" as SysMonitor
+      file "api_monitor.rs" as ApiMonitor
+      file "temperature_monitor.rs" as TempMonitor
+      
+      SysMonitor -up-> ServicesMod
+      ApiMonitor -up-> ServicesMod
+      TempMonitor -up-> ServicesMod
+    }
+    
+    package "database" {
+      file "mod.rs" as DbMod
+      file "connection.rs" as DbConn
+      file "queries.rs" as DbQueries
+      file "models.rs" as DbModels
+    }
+    
+    package "ui" {
+      file "mod.rs" as UiMod
+      file "tui_app.rs" as TuiApp
+      package "components" {
+        file "dashboard.rs" as Dashboard
+        file "process_list.rs" as ProcessList
+        file "charts.rs" as Charts
+      }
+    }
+    
+    package "api" {
+      file "mod.rs" as ApiMod
+      file "server.rs" as ApiServer
+      file "handlers.rs" as Handlers
+      file "routes.rs" as Routes
+    }
+    
+    package "cli" {
+      file "mod.rs" as CliMod
+      file "parser.rs" as Parser
+      file "commands.rs" as Commands
+    }
+    
+    package "config" {
+      file "mod.rs" as ConfigMod
+      file "settings.rs" as Settings
+      file "env.rs" as Env
+    }
+  }
+  
+  folder "tests" {
+    file "integration_tests.rs" as Integration
+    file "unit_tests/" as UnitTests
+  }
+  
+  folder "docs" {
+    file "README.md" as Readme
+    folder "diagrams" as Diagrams
+  }
+  
+  file "Cargo.toml" as Cargo
+  file ".env.example" as EnvExample
+  file "Dockerfile" as Dockerfile
+}
+
+' Main dependencies
+Main --> Lib
+Lib --> ModelsMod
+Lib --> ServicesMod
+Lib --> UiMod
+Lib --> ApiMod
+
+' Service dependencies
+SysMonitor --> Metrics
+SysMonitor --> Process
+SysMonitor --> TempMonitor
+ApiMonitor --> Metrics
+ApiMonitor --> DbConn
+TempMonitor --> TempInfo
+
+' API dependencies
+ApiServer --> Handlers
+Handlers --> ApiMonitor
+Handlers --> DbConn
+
+' UI dependencies
+TuiApp --> SysMonitor
+TuiApp --> Dashboard
+TuiApp --> ProcessList
+
+' CLI dependencies
+Parser --> Commands
+Commands --> SysMonitor
+Commands --> ApiServer
+
+note right of Main
+  Entry point:
+  - Parses CLI args
+  - Initializes services
+  - Starts selected mode
+end note
+
+note left of SysMonitor
+  Core service:
+  - System data collection
+  - Process monitoring
+  - Real-time updates
+end note
+
+note bottom of Cargo
+  Dependencies:
+  - sysinfo = "0.29"
+  - tokio = { version = "1.0", features = ["full"] }
+  - axum = "0.6"
+  - serde = { version = "1.0", features = ["derive"] }
+  - sqlx = { version = "0.7", features = ["postgres"] }
+end note
+@enduml

@@ -1,0 +1,40 @@
+@startuml
+title System Monitor - Activity Diagram
+start
+
+:Start system-monitor;
+
+if (CLI arguments?) then (yes)
+  :Parse arguments;
+  
+  if (mode == "tui") then (yes)
+    :Run TUI mode;
+    stop
+  elseif (mode == "api") then (yes)
+    :Run API mode;
+    stop
+  elseif (mode == "both") then (yes)
+    :Run both modes;
+    stop
+  else
+    :Show help;
+    stop
+  endif
+else (no)
+  :Show menu;
+  
+  if (choice == TUI) then (yes)
+    :Run TUI mode;
+  elseif (choice == API) then (yes)
+    :Run API mode;
+  elseif (choice == Both) then (yes)
+    :Run both modes;
+  elseif (choice == Help) then (yes)
+    :Show help;
+  else
+    :Exit;
+  endif
+  stop
+endif
+
+@enduml

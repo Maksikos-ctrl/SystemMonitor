@@ -1,0 +1,109 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "system_monitor::models" {
+  class SystemMetrics {
+    - id: Option<i64>
+    - timestamp: DateTime<Utc>
+    - cpu_usage: f64
+    - memory_total: u64
+    - memory_used: u64
+    - cpu_temperature: Option<f32>
+    - gpu_temperature: Option<f32>
+    + new() -> Self
+    + to_json() -> serde_json::Value
+  }
+  
+  class ProcessInfo {
+    - pid: u32
+    - name: String
+    - memory_usage: u64
+    - cpu_percentage: f32
+    - network_sent: u64
+    - network_recv: u64
+    + is_system_process() -> bool
+  }
+  
+  class TemperatureInfo {
+    - cpu_temp: Option<f32>
+    - gpu_temp: Option<f32>
+    - motherboard_temp: Option<f32>
+    + get_max() -> Option<f32>
+    + get_warning() -> TemperatureWarning
+  }
+  
+  enum TemperatureWarning {
+    Normal
+    Warning
+    Critical
+    Unknown
+  }
+}
+
+package "system_monitor::services" {
+  class SystemMonitor {
+    - metrics_cache: SystemMetrics
+    - process_list: Vec<ProcessInfo>
+    - update_interval: Duration
+    + new() -> Self
+    + refresh() -> Result<()>
+    + get_metrics() -> &SystemMetrics
+    + get_processes() -> &[ProcessInfo]
+    + get_temperatures() -> TemperatureInfo
+  }
+  
+  class ApiSystemMonitor {
+    - monitor: SystemMonitor
+    - db_pool: PgPool
+    + new(db_url: &str) -> Result<Self>
+    + get_metrics_for_api() -> SystemMetrics
+    + save_to_database() -> Result<()>
+  }
+  
+  class TemperatureMonitor {
+    + new() -> Self
+    + read_temperatures() -> TemperatureInfo
+    + read_temperatures_fallback() -> TemperatureInfo
+  }
+}
+
+package "system_monitor::database" {
+  class Database {
+    - pool: PgPool
+    + connect(url: &str) -> Result<Self>
+    + save_metrics(metrics: &SystemMetrics) -> Result<i64>
+    + get_recent_metrics(limit: i64) -> Result<Vec<SystemMetrics>>
+    + cleanup_old_data(days: i32) -> Result<u64>
+  }
+}
+
+package "system_monitor::ui" {
+  class TuiApp {
+    - monitor: SystemMonitor
+    - current_view: ViewMode
+    - should_quit: bool
+    + run() -> Result<()>
+    + handle_events() -> Result<()>
+    + render() -> Result<()>
+  }
+  
+  enum ViewMode {
+    Dashboard
+    Processes
+    Network
+    Temperatures
+    Settings
+  }
+}
+
+' Relationships
+SystemMonitor "1" *--> "1" TemperatureMonitor
+SystemMonitor "1" --> "0..*" ProcessInfo
+SystemMonitor "1" --> "1" SystemMetrics
+ApiSystemMonitor "1" --> "1" SystemMonitor
+ApiSystemMonitor "1" --> "1" Database
+Database "1" --> "0..*" SystemMetrics
+TuiApp "1" --> "1" SystemMonitor
+TemperatureInfo "1" --> "1" TemperatureWarning
+@enduml

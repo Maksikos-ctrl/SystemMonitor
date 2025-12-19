@@ -1,0 +1,30 @@
+@startuml
+actor User
+participant "main()" as Main
+participant "TuiApp" as Tui
+participant "SystemMonitor" as Monitor
+participant "TemperatureMonitor" as Temp
+
+User -> Main : runs "system-monitor tui"
+Main -> Tui : TuiApp::new()
+Tui -> Monitor : SystemMonitor::new()
+Monitor -> Temp : TemperatureMonitor::new()
+Temp --> Monitor : 
+Monitor --> Tui : 
+Tui -> User : displays TUI interface
+
+loop Every 1 second
+  User -> Tui : (idle or keypress)
+  Tui -> Monitor : refresh()
+  Monitor -> Monitor : collect_system_data()
+  Monitor -> Temp : read_temperatures()
+  Temp --> Monitor : TemperatureInfo
+  Monitor --> Tui : updated metrics
+  Tui -> Tui : render_ui()
+  Tui -> User : updated display
+end
+
+User -> Tui : presses 'q' or 'Q'
+Tui -> Main : returns Ok(())
+Main -> User : program exits
+@enduml

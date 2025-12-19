@@ -1,0 +1,23 @@
+@startuml
+actor "API Client" as Client
+participant "axum::Server" as Server
+participant "metrics_handler()" as Handler
+participant "ApiSystemMonitor" as ApiMonitor
+participant "Database" as DB
+
+Client -> Server : GET /api/v1/metrics
+Server -> Handler : handle_request()
+Handler -> ApiMonitor : get_metrics_for_api()
+ApiMonitor -> ApiMonitor : collect_current_data()
+ApiMonitor --> Handler : SystemMetrics
+
+alt Save to database enabled
+  Handler -> DB : save_metrics(metrics)
+  DB -> DB : INSERT INTO metrics
+  DB --> Handler : record_id
+end
+
+Handler -> Handler : serialize to JSON
+Handler --> Server : Response<Json>
+Server --> Client : 200 OK with metrics
+@enduml

@@ -1,0 +1,45 @@
+@startuml
+package "System Monitor Application" {
+  [CLI Interface] as CLI
+  [TUI Interface] as TUI
+  [REST API] as API
+  [Core Monitor Engine] as Core
+  [Data Models] as Models
+  [Database Layer] as DB
+  [Configuration] as Config
+}
+
+package "External Systems" {
+  [Operating System\n(sysinfo, psutil)] as OS
+  [PostgreSQL Database] as PostgreSQL
+  [HTTP Clients] as HTTP
+  [Terminal/Console] as Terminal
+}
+
+CLI -down-> Core
+TUI -down-> Core
+API -down-> Core
+Core -right-> Models
+Core -down-> DB
+Core -left-> Config
+
+Core .u.> OS : reads system info
+DB .u.> PostgreSQL : stores/retrieves data
+TUI .u.> Terminal : renders interface
+API .u.> HTTP : serves requests
+
+note right of Core
+  Main monitoring logic:
+  - system_monitor::services
+  - Real-time data collection
+  - Caching and aggregation
+end note
+
+note left of Models
+  Data structures:
+  - SystemMetrics
+  - ProcessInfo  
+  - TemperatureInfo
+  - Serialization/Deserialization
+end note
+@enduml

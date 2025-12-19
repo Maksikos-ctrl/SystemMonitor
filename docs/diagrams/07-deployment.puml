@@ -1,0 +1,58 @@
+@startuml
+title System Monitor - Deployment Diagram
+
+package "Development Environment" {
+  rectangle "Developer PC" as DevPC <<device>>
+  database "Local PostgreSQL" as LocalDB
+  folder "Source Code" as Source
+  rectangle "Local API\nlocalhost:8080" as LocalAPI
+  
+  DevPC - LocalAPI
+  LocalAPI - LocalDB
+  Source -- DevPC
+}
+
+package "Production Deployment" {
+  rectangle "Monitor Server" as Server <<server>>
+  database "Production PostgreSQL" as ProdDB
+  rectangle "Backup Server" as Backup <<server>>
+  rectangle "Public API\napi.monitor.example.com" as PublicAPI
+  cloud "Load Balancer" as LB
+  
+  Server - PublicAPI
+  PublicAPI - ProdDB
+  ProdDB .right.> Backup : replication
+  PublicAPI ..> LB
+}
+
+package "Client Devices" {
+  rectangle "Admin TUI" as AdminTUI
+  rectangle "Web Dashboard" as WebUI
+  rectangle "Mobile App" as Mobile
+  
+  AdminTUI ..> LocalAPI : development
+  WebUI ..> PublicAPI : production
+  Mobile ..> PublicAPI : production
+}
+
+note right of DevPC
+  Development setup:
+  - Rust 1.70+
+  - Cargo build
+  - Local testing
+end note
+
+note left of Server
+  Production:
+  - Docker container
+  - Systemd service
+  - Automated monitoring
+end note
+
+note bottom of LB
+  Load balancing:
+  - High availability
+  - SSL termination
+  - Rate limiting
+end note
+@enduml
